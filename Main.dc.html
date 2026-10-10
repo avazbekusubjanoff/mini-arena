@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mini Arena Home</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#06100c;color:#eef6ef;font-family:'Manrope',system-ui,sans-serif}
+*{box-sizing:border-box}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+.disp{font-family:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;text-transform:uppercase;letter-spacing:.01em}
+
+/* ---- CSS 3D box: five faces from custom properties ---- */
+.bx{position:absolute;transform-style:preserve-3d;width:var(--w);height:var(--d);transform:translate3d(var(--x),var(--y),var(--z,0px))}
+.bx>i{position:absolute;display:block;background-color:var(--c)}
+.bx>.t{left:0;top:0;width:100%;height:100%;transform:translateZ(var(--h));background-image:linear-gradient(rgba(255,255,255,.12),rgba(255,255,255,.12))}
+.bx>.f,.bx>.k{left:0;width:100%;height:var(--h);transform:translateZ(calc(var(--h)/2)) rotateX(-90deg)}
+.bx>.f{top:calc(100% - var(--h)/2);background-image:linear-gradient(rgba(0,0,0,.26),rgba(0,0,0,.26))}
+.bx>.k{top:calc(0px - var(--h)/2);background-image:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5))}
+.bx>.l,.bx>.r{width:var(--d);height:var(--h);top:calc(50% - var(--h)/2);transform:translateZ(calc(var(--h)/2)) rotateZ(90deg) rotateX(-90deg)}
+.bx>.l{left:calc(0px - var(--d)/2);background-image:linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.4))}
+.bx>.r{left:calc(100% - var(--d)/2);background-image:linear-gradient(rgba(0,0,0,.14),rgba(0,0,0,.14))}
+.seats>.t{background-image:radial-gradient(circle,rgba(255,255,255,.55) 1.3px,transparent 1.9px);background-size:7px 7px}
+.net>.l,.net>.r{background-image:linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px);background-size:5px 5px}
+.pitch{position:absolute;overflow:hidden;background:repeating-linear-gradient(90deg,#208a4b 0 40px,#1b7a42 40px 80px)}
+.m{position:absolute;border:0 solid rgba(255,255,255,.88)}
+.bill{position:absolute;width:0;height:0;transform-style:preserve-3d}
+
+.stage{position:relative;perspective:1500px;perspective-origin:50% 38%}
+.tilt{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .25s ease-out}
+.scaler{position:absolute;inset:0;transform-style:preserve-3d}
+.world{position:absolute;left:50%;top:56%;width:0;height:0;transform-style:preserve-3d;transform:rotateX(60deg) rotateZ(-35deg) scale(.78);animation:orbit 28s ease-in-out infinite alternate;animation-play-state:var(--ps,running)}
+@keyframes orbit{from{transform:rotateX(60deg) rotateZ(-64deg) scale(.78)}to{transform:rotateX(60deg) rotateZ(-6deg) scale(.78)}}
+@keyframes face{from{transform:rotateZ(64deg) rotateX(-60deg)}to{transform:rotateZ(6deg) rotateX(-60deg)}}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-22px)}}
+@keyframes shade{from{transform:translateZ(12px) scale(1)}to{transform:translateZ(12px) scale(.72)}}
+.face{animation:face 28s ease-in-out infinite alternate;animation-play-state:var(--ps,running)}
+.glow{position:absolute;left:-95px;top:-95px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(255,247,210,.95) 0 5%,rgba(255,240,170,.34) 20%,rgba(255,240,170,0) 62%)}
+.ballbob{animation:bob 2.2s ease-in-out infinite alternate;animation-play-state:var(--ps,running)}
+.ballshade{position:absolute;left:-28px;top:-28px;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.55),transparent 68%);animation:shade 2.2s ease-in-out infinite alternate;animation-play-state:var(--ps,running)}
+
+.mw{position:absolute;left:50%;top:56%;width:0;height:0;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-34deg);transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.pcard:hover .mw{transform:rotateX(58deg) rotateZ(-6deg) scale(1.06)}
+.tilt3{transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s,border-color .4s}
+.pcard:hover{transform:perspective(1100px) rotateX(4deg) rotateY(-6deg) translateY(-10px);box-shadow:0 40px 60px -20px rgba(0,0,0,.7),0 0 0 1px var(--a);}
+.plate{box-shadow:1px 1px 0 #2f5a45,2px 2px 0 #2a5240,3px 3px 0 #254a39,4px 4px 0 #204231,5px 5px 0 #1b3a2b,8px 12px 18px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.fcard:hover .plate{transform:translate(-3px,-3px);box-shadow:1px 1px 0 #2f5a45,2px 2px 0 #2a5240,3px 3px 0 #254a39,4px 4px 0 #204231,5px 5px 0 #1b3a2b,6px 6px 0 #163224,12px 18px 24px rgba(0,0,0,.55)}
+.fcard{transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .3s}
+.fcard:hover{border-color:rgba(255,255,255,.22);transform:translateY(-6px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 28px;border-radius:999px;background:var(--a);color:#06100c;font-weight:700;font-size:16px;border:0;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.35),0 18px 30px -8px rgba(200,255,61,.35);transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 0 rgba(0,0,0,.35),0 24px 36px -8px rgba(200,255,61,.45)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.ghost{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 6px;font-weight:600;font-size:16px;border-bottom:1px solid rgba(255,255,255,.35)}
+.ghost:hover{border-color:var(--a);color:var(--a)}
+.navlink{font-size:15px;font-weight:600;color:#c3d4c8;min-height:44px;display:inline-flex;align-items:center}
+.navlink:hover{color:#fff}
+.marq{display:flex;width:max-content;animation:marq 38s linear infinite}
+@keyframes marq{to{transform:translateX(-50%)}}
+.chip,.tab,.slot{font-weight:700;border:1px solid rgba(255,255,255,.14);background:#0c1c15;color:#eef6ef;cursor:pointer;transition:transform .15s,background .15s,border-color .15s}
+.chip:hover,.tab:hover,.slot:hover:not(:disabled){border-color:var(--a);transform:translateY(-2px)}
+.chip[data-on="true"],.tab[data-on="true"],.slot[data-on="true"]{background:var(--a);color:#06100c;border-color:var(--a);box-shadow:0 5px 0 rgba(0,0,0,.4)}
+.slot:disabled{opacity:.38;cursor:not-allowed;text-decoration:line-through}
+.prow{border-top:1px solid rgba(255,255,255,.12);transition:background .3s,color .3s,padding .3s}
+.prow:hover{background:var(--a);color:#06100c;padding-left:28px;padding-right:28px}
+.prow .dim{opacity:.72}
+.ticket{transform:perspective(1300px) rotateY(-9deg) rotateX(3deg);transition:transform .6s cubic-bezier(.2,.8,.2,1);box-shadow:-30px 40px 60px -20px rgba(0,0,0,.7)}
+.ticket:hover{transform:perspective(1300px) rotateY(0deg) rotateX(0deg)}
+@media (max-width:760px){
+  .stage{height:380px!important}
+  .scaler{transform:scale(.5)}
+  .navlinks{display:none!important}
+  .ticket{transform:none}
+}
+</style>
+</helmet>
+
+<div style="--a:{{accent}};--ps:{{playState}};background:#06100c;color:#eef6ef;overflow:hidden;position:relative">
+
+<!-- ===================== HERO ===================== -->
+<header style="position:relative;background:radial-gradient(900px 620px at 78% 22%,rgba(200,255,61,.09),transparent 62%),radial-gradient(700px 500px at 6% 0%,rgba(255,226,150,.08),transparent 60%),#06100c;padding-bottom:40px">
+  <div class="disp" aria-hidden="true" style="position:absolute;right:-20px;top:120px;font-size:clamp(200px,30vw,440px);font-weight:900;line-height:.8;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.07);pointer-events:none;white-space:nowrap">Arena</div>
+
+  <nav style="position:relative;max-width:1320px;margin:0 auto;padding:28px clamp(20px,4vw,48px);display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <a href="#top" style="display:flex;align-items:center;gap:12px" aria-label="Mini Arena home">
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#c8ff3d"></rect><rect x="8" y="11" width="24" height="18" rx="1.5" fill="none" stroke="#06100c" stroke-width="2.2"></rect><line x1="20" y1="11" x2="20" y2="29" stroke="#06100c" stroke-width="2.2"></line><circle cx="20" cy="20" r="4" fill="none" stroke="#06100c" stroke-width="2.2"></circle></svg>
+      <span class="disp" style="font-size:28px;font-weight:900;letter-spacing:.04em">Mini Arena</span>
+    </a>
+    <div class="navlinks" style="display:flex;gap:32px;align-items:center">
+      <a class="navlink" href="#pitches">Pitches</a>
+      <a class="navlink" href="#arena">The arena</a>
+      <a class="navlink" href="#programs">Leagues</a>
+      <a class="navlink" href="#contact">Visit</a>
+    </div>
+    <a class="btn" href="#book" style="min-height:46px;padding:0 22px">Book a pitch</a>
+  </nav>
+
+  <div id="top" style="position:relative;max-width:1320px;margin:0 auto;padding:24px clamp(20px,4vw,48px) 0;display:flex;flex-wrap:wrap;align-items:center;gap:24px 16px">
+    <div style="flex:1 1 460px;min-width:0;display:flex;flex-direction:column;gap:30px;position:relative;z-index:2">
+      <div style="display:flex;align-items:center;gap:14px;font-size:14px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--a)">
+        <span style="width:36px;height:2px;background:var(--a)"></span>Floodlit mini stadium
+      </div>
+      <h1 class="disp" style="margin:0;font-size:clamp(64px,8.6vw,132px);font-weight:900;line-height:.86;text-wrap:balance">Play under<br><span style="color:var(--a)">the lights.</span></h1>
+      <p style="margin:0;max-width:520px;font-size:19px;line-height:1.55;color:#b4c9bb;text-wrap:pretty">A stadium sized for your game. Five-a-side nights, weekend cups and youth training, with real stands, real floodlights and a pitch you can book in under a minute.</p>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px 32px">
+        <a class="btn" href="#book">
+          Book a pitch
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </a>
+        <a class="ghost" href="#pitches">Explore the pitches</a>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px 36px;padding-top:26px;margin-top:6px;border-top:1px solid rgba(255,255,255,.12);max-width:560px">
+        <div style="font-size:14px;font-weight:600;color:#c9d9ce">Floodlit evenings</div>
+        <div style="font-size:14px;font-weight:600;color:#c9d9ce">Spectator stands</div>
+        <div style="font-size:14px;font-weight:600;color:#c9d9ce">Online booking</div>
+      </div>
+    </div>
+
+    <!-- 3D stadium -->
+    <div class="stage" style="flex:1 1 560px;min-width:0;height:620px" onMouseMove="{{onMove}}" onMouseLeave="{{onLeave}}" role="img" aria-label="Animated 3D model of the mini stadium: a floodlit pitch with stands, goals and a floating ball">
+      <div class="tilt" style="transform:rotateX({{tiltX}}deg) rotateY({{tiltY}}deg)">
+       <div class="scaler">
+        <div class="world">
+
+          <!-- base slab -->
+          <div class="bx" style="--w:500px;--d:340px;--h:10px;--x:-250px;--y:-170px;--z:0px;--c:#16291f"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+
+          <!-- pitch -->
+          <div class="pitch" style="left:-220px;top:-140px;width:440px;height:280px;transform:translateZ(11px)">
+            <div class="m" style="inset:4% 2.5%;border-width:2px"></div>
+            <div class="m" style="left:50%;top:4%;bottom:4%;border-left-width:2px"></div>
+            <div class="m" style="left:calc(50% - 34px);top:calc(50% - 34px);width:68px;height:68px;border-radius:50%;border-width:2px"></div>
+            <div class="m" style="left:2.5%;top:24%;bottom:24%;width:14%;border-width:2px 2px 2px 0"></div>
+            <div class="m" style="right:2.5%;top:24%;bottom:24%;width:14%;border-width:2px 0 2px 2px"></div>
+            <div class="m" style="left:2.5%;top:38%;bottom:38%;width:5.5%;border-width:2px 2px 2px 0"></div>
+            <div class="m" style="right:2.5%;top:38%;bottom:38%;width:5.5%;border-width:2px 0 2px 2px"></div>
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,214,.2),rgba(0,0,0,0) 60%),radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.28) 100%)"></div>
+          </div>
+
+          <!-- advertising boards (accent) -->
+          <div class="bx" style="--w:460px;--d:3px;--h:8px;--x:-230px;--y:-148px;--z:11px;--c:var(--a)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:460px;--d:3px;--h:8px;--x:-230px;--y:145px;--z:11px;--c:var(--a)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:296px;--h:8px;--x:-233px;--y:-148px;--z:11px;--c:#e9f2ea"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:296px;--h:8px;--x:230px;--y:-148px;--z:11px;--c:#e9f2ea"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+
+          <!-- stands: south -->
+          <div class="bx seats" style="--w:500px;--d:84px;--h:18px;--x:-250px;--y:170px;--z:0px;--c:#1c5548"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:500px;--d:58px;--h:38px;--x:-250px;--y:196px;--z:0px;--c:#216454"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:500px;--d:32px;--h:58px;--x:-250px;--y:222px;--z:0px;--c:#277460"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <!-- stands: north -->
+          <div class="bx seats" style="--w:500px;--d:84px;--h:18px;--x:-250px;--y:-254px;--z:0px;--c:#1c5548"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:500px;--d:58px;--h:38px;--x:-250px;--y:-254px;--z:0px;--c:#216454"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:500px;--d:32px;--h:58px;--x:-250px;--y:-254px;--z:0px;--c:#277460"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <!-- stands: east + west ends -->
+          <div class="bx seats" style="--w:66px;--d:340px;--h:14px;--x:250px;--y:-170px;--z:0px;--c:#1c5548"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:40px;--d:340px;--h:30px;--x:276px;--y:-170px;--z:0px;--c:#216454"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:66px;--d:340px;--h:14px;--x:-316px;--y:-170px;--z:0px;--c:#1c5548"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:40px;--d:340px;--h:30px;--x:-316px;--y:-170px;--z:0px;--c:#216454"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+
+          <!-- goals: west -->
+          <div class="bx" style="--w:4px;--d:4px;--h:28px;--x:-214px;--y:-34px;--z:11px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:4px;--d:4px;--h:28px;--x:-214px;--y:30px;--z:11px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:4px;--d:68px;--h:3px;--x:-214px;--y:-34px;--z:36px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx net" style="--w:2px;--d:68px;--h:28px;--x:-230px;--y:-34px;--z:11px;--c:rgba(255,255,255,.14)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <!-- goals: east -->
+          <div class="bx" style="--w:4px;--d:4px;--h:28px;--x:210px;--y:-34px;--z:11px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:4px;--d:4px;--h:28px;--x:210px;--y:30px;--z:11px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:4px;--d:68px;--h:3px;--x:210px;--y:-34px;--z:36px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx net" style="--w:2px;--d:68px;--h:28px;--x:228px;--y:-34px;--z:11px;--c:rgba(255,255,255,.14)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+
+          <!-- floodlight masts -->
+          <div class="bx" style="--w:8px;--d:8px;--h:124px;--x:288px;--y:262px;--z:0px;--c:#8ea597"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:8px;--d:8px;--h:124px;--x:-296px;--y:262px;--z:0px;--c:#8ea597"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:8px;--d:8px;--h:124px;--x:288px;--y:-270px;--z:0px;--c:#8ea597"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:8px;--d:8px;--h:124px;--x:-296px;--y:-270px;--z:0px;--c:#8ea597"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:44px;--d:8px;--h:16px;--x:274px;--y:262px;--z:124px;--c:#fff6cf"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:44px;--d:8px;--h:16px;--x:-318px;--y:262px;--z:124px;--c:#fff6cf"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:44px;--d:8px;--h:16px;--x:274px;--y:-270px;--z:124px;--c:#fff6cf"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:44px;--d:8px;--h:16px;--x:-318px;--y:-270px;--z:124px;--c:#fff6cf"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+
+          <!-- floodlight glows (always face the viewer) -->
+          <div class="bill" style="transform:translate3d(296px,266px,134px)"><div class="face"><div class="glow"></div></div></div>
+          <div class="bill" style="transform:translate3d(-296px,266px,134px)"><div class="face"><div class="glow"></div></div></div>
+          <div class="bill" style="transform:translate3d(296px,-266px,134px)"><div class="face"><div class="glow"></div></div></div>
+          <div class="bill" style="transform:translate3d(-296px,-266px,134px)"><div class="face"><div class="glow"></div></div></div>
+
+          <!-- ball + shadow -->
+          <div class="ballshade"></div>
+          <div class="bill" style="transform:translate3d(0,0,92px)">
+            <div class="face"><div class="ballbob">
+              <svg width="64" height="64" viewBox="0 0 100 100" style="position:absolute;left:-32px;top:-32px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))" aria-hidden="true">
+                <defs><radialGradient id="ballg" cx="35%" cy="30%" r="78%"><stop offset="0" stop-color="#ffffff"></stop><stop offset=".55" stop-color="#e2e9e3"></stop><stop offset="1" stop-color="#76847c"></stop></radialGradient></defs>
+                <circle cx="50" cy="50" r="48" fill="url(#ballg)"></circle>
+                <polygon points="50,33 65,44 59,62 41,62 35,44" fill="#0e1a14"></polygon>
+                <path d="M50 33 L50 12 M65 44 L85 37 M59 62 L72 80 M41 62 L28 80 M35 44 L15 37" stroke="#0e1a14" stroke-width="2.2" fill="none"></path>
+                <polygon points="50,2 62,9 58,20 42,20 38,9" fill="#0e1a14"></polygon>
+                <polygon points="94,40 98,54 88,62 80,52 84,40" fill="#0e1a14"></polygon>
+                <polygon points="6,40 16,40 20,52 12,62 2,54" fill="#0e1a14"></polygon>
+                <polygon points="30,88 40,80 60,80 70,88 62,98 38,98" fill="#0e1a14"></polygon>
+              </svg>
+            </div></div>
+          </div>
+
+        </div>
+       </div>
+      </div>
+      <div style="position:absolute;left:0;bottom:6px;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#7f9a8a">Move your cursor to tilt the arena</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== TICKER ===================== -->
+<div style="border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);background:#0a1812;overflow:hidden;padding:20px 0" aria-hidden="true">
+  <div class="marq">
+    <div class="disp" style="display:flex;align-items:center;gap:36px;padding-right:36px;font-size:34px;font-weight:800;white-space:nowrap;color:#dbe8de">
+      <span>Five-a-side</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Seven-a-side</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Floodlit nights</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Weekend cups</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Birthday matches</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Kids academy</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span>
+    </div>
+    <div class="disp" style="display:flex;align-items:center;gap:36px;padding-right:36px;font-size:34px;font-weight:800;white-space:nowrap;color:#dbe8de">
+      <span>Five-a-side</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Seven-a-side</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Floodlit nights</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Weekend cups</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Birthday matches</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span><span>Kids academy</span><span style="width:10px;height:10px;background:var(--a);transform:rotate(45deg)"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PITCHES ===================== -->
+<section id="pitches" style="max-width:1320px;margin:0 auto;padding:130px clamp(20px,4vw,48px) 110px">
+  <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px 48px;margin-bottom:64px">
+    <div style="display:flex;flex-direction:column;gap:18px;flex:1 1 420px">
+      <div style="display:flex;align-items:center;gap:14px;font-size:14px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--a)"><span style="width:36px;height:2px;background:var(--a)"></span>The pitches</div>
+      <h2 class="disp" style="margin:0;font-size:clamp(52px,7vw,104px);font-weight:900;line-height:.88;text-wrap:balance">Three pitches.<br>One arena.</h2>
+    </div>
+    <p style="margin:0;flex:0 1 400px;font-size:18px;line-height:1.6;color:#a9bfb0;text-wrap:pretty">Pick the size that fits your squad. Every pitch sits inside the same stadium, under the same lights.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:28px">
+
+    <!-- Pitch A -->
+    <article class="pcard tilt3" style="background:linear-gradient(180deg,#11281d,#0a1610);border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="position:relative;height:250px;perspective:900px;background:radial-gradient(300px 180px at 50% 60%,rgba(200,255,61,.14),transparent 70%)" role="img" aria-label="3D model of the five-a-side pitch">
+        <div class="mw">
+          <div class="bx" style="--w:250px;--d:150px;--h:8px;--x:-125px;--y:-75px;--z:0px;--c:#16291f"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="pitch" style="left:-110px;top:-62px;width:220px;height:124px;transform:translateZ(9px)">
+            <div class="m" style="inset:5% 3%;border-width:2px"></div>
+            <div class="m" style="left:50%;top:5%;bottom:5%;border-left-width:2px"></div>
+            <div class="m" style="left:calc(50% - 20px);top:calc(50% - 20px);width:40px;height:40px;border-radius:50%;border-width:2px"></div>
+            <div class="m" style="left:3%;top:28%;bottom:28%;width:15%;border-width:2px 2px 2px 0"></div>
+            <div class="m" style="right:3%;top:28%;bottom:28%;width:15%;border-width:2px 0 2px 2px"></div>
+          </div>
+          <div class="bx seats" style="--w:250px;--d:26px;--h:14px;--x:-125px;--y:75px;--z:0px;--c:#216454"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:16px;--x:-106px;--y:-18px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:16px;--x:-106px;--y:15px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:36px;--h:2px;--x:-106px;--y:-18px;--z:23px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:16px;--x:103px;--y:-18px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:16px;--x:103px;--y:15px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:36px;--h:2px;--x:103px;--y:-18px;--z:23px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+        </div>
+      </div>
+      <div style="padding:8px 32px 32px;display:flex;flex-direction:column;gap:16px;flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><h3 class="disp" style="margin:0;font-size:44px;font-weight:900">Pitch A</h3><span style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--a)">Five-a-side</span></div>
+        <p style="margin:0;font-size:16px;line-height:1.6;color:#a9bfb0;text-wrap:pretty">Tight, fast and loud. The one for after-work games, birthday matches and friends who never agree on teams.</p>
+        <div style="display:flex;gap:24px;padding-top:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,.1);font-size:14px;color:#c9d9ce"><span>Size [L × W m]</span><span>[PRICE] / hour</span></div>
+        <a class="ghost" href="#book" onClick="{{pickA}}" style="align-self:flex-start;color:var(--a)">Check times <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+      </div>
+    </article>
+
+    <!-- Pitch B -->
+    <article class="pcard tilt3" style="background:linear-gradient(180deg,#11281d,#0a1610);border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="position:relative;height:250px;perspective:900px;background:radial-gradient(300px 180px at 50% 60%,rgba(200,255,61,.14),transparent 70%)" role="img" aria-label="3D model of the seven-a-side pitch">
+        <div class="mw">
+          <div class="bx" style="--w:310px;--d:186px;--h:8px;--x:-155px;--y:-93px;--z:0px;--c:#16291f"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="pitch" style="left:-140px;top:-80px;width:280px;height:160px;transform:translateZ(9px)">
+            <div class="m" style="inset:5% 3%;border-width:2px"></div>
+            <div class="m" style="left:50%;top:5%;bottom:5%;border-left-width:2px"></div>
+            <div class="m" style="left:calc(50% - 26px);top:calc(50% - 26px);width:52px;height:52px;border-radius:50%;border-width:2px"></div>
+            <div class="m" style="left:3%;top:25%;bottom:25%;width:15%;border-width:2px 2px 2px 0"></div>
+            <div class="m" style="right:3%;top:25%;bottom:25%;width:15%;border-width:2px 0 2px 2px"></div>
+            <div class="m" style="left:3%;top:38%;bottom:38%;width:6%;border-width:2px 2px 2px 0"></div>
+            <div class="m" style="right:3%;top:38%;bottom:38%;width:6%;border-width:2px 0 2px 2px"></div>
+          </div>
+          <div class="bx seats" style="--w:310px;--d:26px;--h:14px;--x:-155px;--y:93px;--z:0px;--c:#216454"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx seats" style="--w:310px;--d:16px;--h:28px;--x:-155px;--y:103px;--z:0px;--c:#277460"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:18px;--x:-136px;--y:-24px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:18px;--x:-136px;--y:21px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:48px;--h:2px;--x:-136px;--y:-24px;--z:25px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:18px;--x:133px;--y:-24px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:3px;--h:18px;--x:133px;--y:21px;--z:9px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:3px;--d:48px;--h:2px;--x:133px;--y:-24px;--z:25px;--c:#f4f8f3"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+        </div>
+      </div>
+      <div style="padding:8px 32px 32px;display:flex;flex-direction:column;gap:16px;flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><h3 class="disp" style="margin:0;font-size:44px;font-weight:900">Pitch B</h3><span style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--a)">Seven-a-side</span></div>
+        <p style="margin:0;font-size:16px;line-height:1.6;color:#a9bfb0;text-wrap:pretty">More room to run. Built for league nights, bigger groups and games that deserve a proper crowd in the stand.</p>
+        <div style="display:flex;gap:24px;padding-top:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,.1);font-size:14px;color:#c9d9ce"><span>Size [L × W m]</span><span>[PRICE] / hour</span></div>
+        <a class="ghost" href="#book" onClick="{{pickB}}" style="align-self:flex-start;color:var(--a)">Check times <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+      </div>
+    </article>
+
+    <!-- Training pitch -->
+    <article class="pcard tilt3" style="background:linear-gradient(180deg,#11281d,#0a1610);border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="position:relative;height:250px;perspective:900px;background:radial-gradient(300px 180px at 50% 60%,rgba(200,255,61,.14),transparent 70%)" role="img" aria-label="3D model of the training pitch with cones">
+        <div class="mw">
+          <div class="bx" style="--w:230px;--d:186px;--h:8px;--x:-115px;--y:-93px;--z:0px;--c:#16291f"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="pitch" style="left:-100px;top:-80px;width:200px;height:160px;transform:translateZ(9px)">
+            <div class="m" style="inset:5%;border-width:2px"></div>
+            <div class="m" style="left:5%;right:5%;top:50%;border-top-width:2px"></div>
+            <div class="m" style="left:calc(50% - 22px);top:calc(50% - 22px);width:44px;height:44px;border-radius:50%;border-width:2px"></div>
+          </div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:-70px;--y:-45px;--z:9px;--c:#ff8a3d"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:-35px;--y:-45px;--z:9px;--c:#ff8a3d"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:0px;--y:-45px;--z:9px;--c:#ff8a3d"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:35px;--y:-45px;--z:9px;--c:#ff8a3d"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:65px;--y:-45px;--z:9px;--c:#ff8a3d"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:-70px;--y:40px;--z:9px;--c:var(--a)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:-35px;--y:40px;--z:9px;--c:var(--a)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:0px;--y:40px;--z:9px;--c:var(--a)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:35px;--y:40px;--z:9px;--c:var(--a)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+          <div class="bx" style="--w:7px;--d:7px;--h:10px;--x:65px;--y:40px;--z:9px;--c:var(--a)"><i class="t"></i><i class="f"></i><i class="k"></i><i class="l"></i><i class="r"></i></div>
+        </div>
+      </div>
+      <div style="padding:8px 32px 32px;display:flex;flex-direction:column;gap:16px;flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><h3 class="disp" style="margin:0;font-size:44px;font-weight:900">Training pitch</h3><span style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--a)">Open turf</span></div>
+        <p style="margin:0;font-size:16px;line-height:1.6;color:#a9bfb0;text-wrap:pretty">Open turf for coaching blocks, drills and youth sessions. Cones out, lights on, no match markings in the way.</p>
+        <div style="display:flex;gap:24px;padding-top:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,.1);font-size:14px;color:#c9d9ce"><span>Size [L × W m]</span><span>[PRICE] / hour</span></div>
+        <a class="ghost" href="#book" onClick="{{pickT}}" style="align-self:flex-start;color:var(--a)">Check times <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ===================== THE ARENA / FACILITIES ===================== -->
+<section id="arena" style="background:#0a1812;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)">
+  <div style="max-width:1320px;margin:0 auto;padding:120px clamp(20px,4vw,48px);display:flex;flex-wrap:wrap;gap:64px 72px">
+    <div style="flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:24px;align-self:flex-start">
+      <div style="display:flex;align-items:center;gap:14px;font-size:14px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--a)"><span style="width:36px;height:2px;background:var(--a)"></span>The arena</div>
+      <h2 class="disp" style="margin:0;font-size:clamp(52px,6.4vw,96px);font-weight:900;line-height:.88;text-wrap:balance">Built like a stadium. Sized like a club night.</h2>
+      <p style="margin:0;font-size:18px;line-height:1.6;color:#a9bfb0;max-width:440px;text-wrap:pretty">Everything around the pitch is there for the match: light, seats, a place to change and somewhere to talk it over after.</p>
+    </div>
+
+    <div style="flex:2 1 560px;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:24px">
+      <div class="fcard" style="background:#0e2018;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:20px">
+        <div class="plate" style="width:60px;height:60px;border-radius:16px;background:#12291f;display:flex;align-items:center;justify-content:center;color:var(--a)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></div>
+        <h3 style="margin:0;font-size:22px;font-weight:700">Floodlights</h3>
+        <p style="margin:0;font-size:15.5px;line-height:1.6;color:#a9bfb0">Four masts, even light across the pitch. Evening games feel like match day.</p>
+      </div>
+      <div class="fcard" style="background:#0e2018;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:20px">
+        <div class="plate" style="width:60px;height:60px;border-radius:16px;background:#12291f;display:flex;align-items:center;justify-content:center;color:var(--a)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M3 20v-4h5v-4h5V8h5V4h3v16"></path></svg></div>
+        <h3 style="margin:0;font-size:22px;font-weight:700">Spectator stands</h3>
+        <p style="margin:0;font-size:15.5px;line-height:1.6;color:#a9bfb0">Tiered seating on every side, so friends and family get a proper view.</p>
+      </div>
+      <div class="fcard" style="background:#0e2018;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:20px">
+        <div class="plate" style="width:60px;height:60px;border-radius:16px;background:#12291f;display:flex;align-items:center;justify-content:center;color:var(--a)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="7" height="18" rx="1"></rect><rect x="13" y="3" width="7" height="18" rx="1"></rect><path d="M8.5 11v2M15.5 11v2"></path></svg></div>
+        <h3 style="margin:0;font-size:22px;font-weight:700">Changing rooms</h3>
+        <p style="margin:0;font-size:15.5px;line-height:1.6;color:#a9bfb0">Lockers and showers for both teams, kept ready between bookings.</p>
+      </div>
+      <div class="fcard" style="background:#0e2018;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:20px">
+        <div class="plate" style="width:60px;height:60px;border-radius:16px;background:#12291f;display:flex;align-items:center;justify-content:center;color:var(--a)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8zM17 10h2a2 2 0 0 1 0 4h-2M8 2v3M12 2v3"></path></svg></div>
+        <h3 style="margin:0;font-size:22px;font-weight:700">Café corner</h3>
+        <p style="margin:0;font-size:15.5px;line-height:1.6;color:#a9bfb0">Hot drinks before kick-off and a table for the post-match debate.</p>
+      </div>
+      <div class="fcard" style="background:#0e2018;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:20px">
+        <div class="plate" style="width:60px;height:60px;border-radius:16px;background:#12291f;display:flex;align-items:center;justify-content:center;color:var(--a)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="12" rx="2"></rect><path d="M12 5v12M6 21h12M9 17v4M15 17v4"></path></svg></div>
+        <h3 style="margin:0;font-size:22px;font-weight:700">Scoreboard</h3>
+        <p style="margin:0;font-size:15.5px;line-height:1.6;color:#a9bfb0">A live scoreboard and match clock, so every goal counts in front of the stands.</p>
+      </div>
+      <div class="fcard" style="background:#0e2018;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:20px">
+        <div class="plate" style="width:60px;height:60px;border-radius:16px;background:#12291f;display:flex;align-items:center;justify-content:center;color:var(--a)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="M9.5 17V7h3.5a3 3 0 0 1 0 6H9.5"></path></svg></div>
+        <h3 style="margin:0;font-size:22px;font-weight:700">Easy parking</h3>
+        <p style="margin:0;font-size:15.5px;line-height:1.6;color:#a9bfb0">Park next to the gate and walk straight to your pitch. [PARKING DETAILS]</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== BOOKING ===================== -->
+<section id="book" style="max-width:1320px;margin:0 auto;padding:130px clamp(20px,4vw,48px) 120px">
+  <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:56px">
+    <div style="display:flex;align-items:center;gap:14px;font-size:14px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--a)"><span style="width:36px;height:2px;background:var(--a)"></span>Book a pitch</div>
+    <h2 class="disp" style="margin:0;font-size:clamp(52px,7vw,104px);font-weight:900;line-height:.88;text-wrap:balance">Pick it. Book it.<br>Kick off.</h2>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px 56px;align-items:flex-start">
+    <div style="flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:40px">
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fa898">1 · Pitch</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          <sc-for list="{{pitches}}" as="p" hint-placeholder-count="3">
+            <button class="tab" data-on="{{p.on}}" onClick="{{p.pick}}" style="min-height:56px;padding:0 26px;border-radius:16px;font-size:16px">{{p.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fa898">2 · Day</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(74px,100%),1fr));gap:10px">
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+            <button class="chip" data-on="{{d.on}}" onClick="{{d.pick}}" style="min-height:76px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+              <span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8">{{d.wd}}</span>
+              <span class="disp" style="font-size:30px;font-weight:900;line-height:1">{{d.num}}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fa898">3 · Kick-off time</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(112px,100%),1fr));gap:10px">
+          <sc-for list="{{slots}}" as="s" hint-placeholder-count="6">
+            <button class="slot" data-on="{{s.on}}" disabled="{{s.taken}}" onClick="{{s.pick}}" style="min-height:56px;border-radius:14px;font-size:17px">{{s.label}}</button>
+          </sc-for>
+        </div>
+        <div style="font-size:14px;color:#8fa898">Struck-through times are already booked.</div>
+      </div>
+    </div>
+
+    <!-- ticket -->
+    <div style="flex:0 1 400px;min-width:min(100%,320px);margin:0 auto;padding:20px 0">
+      <div class="ticket" style="position:relative;background:#eef6ef;color:#0b1812;border-radius:26px;overflow:visible">
+        <div style="padding:34px 34px 28px;display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <span class="disp" style="font-size:24px;font-weight:900;letter-spacing:.06em">Mini Arena</span>
+            <span style="font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;background:#0b1812;color:#c8ff3d;padding:6px 12px;border-radius:999px">Match ticket</span>
+          </div>
+          <div class="disp" style="font-size:64px;font-weight:900;line-height:.9">{{ticketPitch}}</div>
+          <div style="font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#3b5546">{{ticketFormat}}</div>
+        </div>
+        <div style="position:relative;height:0;border-top:2px dashed #b4c7b9;margin:0 22px">
+          <span style="position:absolute;left:-44px;top:-18px;width:34px;height:34px;border-radius:50%;background:#06100c"></span>
+          <span style="position:absolute;right:-44px;top:-18px;width:34px;height:34px;border-radius:50%;background:#06100c"></span>
+        </div>
+        <div style="padding:26px 34px 34px;display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+            <div><div style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#3b5546">Date</div><div style="font-size:22px;font-weight:800;margin-top:4px">{{ticketDate}}</div></div>
+            <div><div style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#3b5546">Time</div><div style="font-size:22px;font-weight:800;margin-top:4px">{{ticketTime}}</div></div>
+            <div><div style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#3b5546">Price</div><div style="font-size:22px;font-weight:800;margin-top:4px">[PRICE]</div></div>
+          </div>
+          <div aria-hidden="true" style="height:44px;background:repeating-linear-gradient(90deg,#0b1812 0 2px,transparent 2px 5px,#0b1812 5px 6px,transparent 6px 11px,#0b1812 11px 14px,transparent 14px 17px);opacity:.85;border-radius:3px"></div>
+          <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+            <button class="btn" onClick="{{send}}" style="width:100%;background:#0b1812;color:#c8ff3d;box-shadow:0 6px 0 rgba(0,0,0,.25)">Request this slot</button>
+          </sc-if>
+          <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+            <div role="status" style="display:flex;flex-direction:column;gap:6px;min-height:52px;justify-content:center;text-align:center;font-weight:700;font-size:16px;background:#c8ff3d;border-radius:999px;padding:12px 20px">Request sent. We will confirm shortly.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PROGRAMS ===================== -->
+<section id="programs" style="background:#0a1812;border-top:1px solid rgba(255,255,255,.08)">
+  <div style="max-width:1320px;margin:0 auto;padding:120px clamp(20px,4vw,48px) 130px">
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px 48px;margin-bottom:56px">
+      <div style="display:flex;flex-direction:column;gap:18px;flex:1 1 420px">
+        <div style="display:flex;align-items:center;gap:14px;font-size:14px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--a)"><span style="width:36px;height:2px;background:var(--a)"></span>Leagues &amp; programs</div>
+        <h2 class="disp" style="margin:0;font-size:clamp(52px,7vw,104px);font-weight:900;line-height:.88;text-wrap:balance">More than<br>a one-off game.</h2>
+      </div>
+      <p style="margin:0;flex:0 1 380px;font-size:18px;line-height:1.6;color:#a9bfb0;text-wrap:pretty">Come back every week, enter a cup, or bring the kids. There is a regular reason to be under these lights.</p>
+    </div>
+
+    <div style="border-bottom:1px solid rgba(255,255,255,.12)">
+      <a class="prow" href="#book" aria-label="Enquire about the Weeknight League" style="display:flex;flex-wrap:wrap;align-items:center;gap:16px 40px;padding:36px 0">
+        <span class="disp dim" style="flex:0 0 64px;font-size:28px;font-weight:800">01</span>
+        <span class="disp" style="flex:1 1 300px;font-size:clamp(40px,4.6vw,68px);font-weight:900;line-height:.95">Weeknight League</span>
+        <span class="dim" style="flex:1 1 300px;font-size:16.5px;line-height:1.55;text-wrap:pretty">Teams of five or seven, one fixed night, a full season with a table and a final under the lights.</span>
+        <span class="dim" style="flex:0 1 160px;font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">[DAY · TIME]</span>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"></path></svg>
+      </a>
+      <a class="prow" href="#book" aria-label="Enquire about the Weekend Cup" style="display:flex;flex-wrap:wrap;align-items:center;gap:16px 40px;padding:36px 0">
+        <span class="disp dim" style="flex:0 0 64px;font-size:28px;font-weight:800">02</span>
+        <span class="disp" style="flex:1 1 300px;font-size:clamp(40px,4.6vw,68px);font-weight:900;line-height:.95">Weekend Cup</span>
+        <span class="dim" style="flex:1 1 300px;font-size:16.5px;line-height:1.55;text-wrap:pretty">A one-day knockout for friends, offices and clubs. Bring a team, leave with a trophy.</span>
+        <span class="dim" style="flex:0 1 160px;font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">[DATE]</span>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"></path></svg>
+      </a>
+      <a class="prow" href="#book" aria-label="Enquire about the Kids Academy" style="display:flex;flex-wrap:wrap;align-items:center;gap:16px 40px;padding:36px 0">
+        <span class="disp dim" style="flex:0 0 64px;font-size:28px;font-weight:800">03</span>
+        <span class="disp" style="flex:1 1 300px;font-size:clamp(40px,4.6vw,68px);font-weight:900;line-height:.95">Kids Academy</span>
+        <span class="dim" style="flex:1 1 300px;font-size:16.5px;line-height:1.55;text-wrap:pretty">Coached sessions on the training pitch, grouped by age, with the stands open for parents.</span>
+        <span class="dim" style="flex:0 1 160px;font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">[DAY · TIME]</span>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"></path></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer id="contact" style="position:relative;overflow:hidden;background:radial-gradient(800px 500px at 50% 0%,rgba(200,255,61,.1),transparent 65%),#06100c">
+  <div class="disp" aria-hidden="true" style="position:absolute;left:50%;transform:translateX(-50%);bottom:-70px;font-size:clamp(160px,26vw,380px);font-weight:900;line-height:.8;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.07);white-space:nowrap;pointer-events:none">Mini Arena</div>
+  <div style="position:relative;max-width:1320px;margin:0 auto;padding:130px clamp(20px,4vw,48px) 60px;display:flex;flex-direction:column;gap:80px">
+    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:36px">
+      <h2 class="disp" style="margin:0;font-size:clamp(60px,9vw,140px);font-weight:900;line-height:.86;text-wrap:balance">Kick-off is<br><span style="color:var(--a)">one tap away.</span></h2>
+      <a class="btn" href="#book">Book a pitch <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:36px;padding-top:40px;border-top:1px solid rgba(255,255,255,.12)">
+      <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--a)">Find us</div><div style="font-size:16px;line-height:1.6;color:#c9d9ce">[STREET ADDRESS]<br>[CITY]</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--a)">Open</div><div style="font-size:16px;line-height:1.6;color:#c9d9ce">[OPENING HOURS]</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--a)">Talk to us</div><div style="font-size:16px;line-height:1.6;color:#c9d9ce">[PHONE]<br>[EMAIL]</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--a)">Follow</div><div style="font-size:16px;line-height:1.6;color:#c9d9ce">[SOCIAL LINKS]</div></div>
+    </div>
+    <div style="font-size:14px;color:#7f9a8a;padding-bottom:150px">© Mini Arena. All rights reserved.</div>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#c8ff3d","options":["#c8ff3d","#ffc766","#5ee6c1","#ff8a5c"]},"spin":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":5000}}'>
+class Component extends DCLogic {
+  state = { pitch: 0, day: 0, slot: 2, sent: false, tx: 0, ty: 0 };
+
+  taken(i, day, pitch) { return ((i * 3) + (day * 2) + pitch) % 5 === 0; }
+
+  renderVals() {
+    const s = this.state;
+    const names = [
+      { label: 'Pitch A · Five-a-side', name: 'Pitch A', fmt: 'Five-a-side' },
+      { label: 'Pitch B · Seven-a-side', name: 'Pitch B', fmt: 'Seven-a-side' },
+      { label: 'Training pitch', name: 'Training pitch', fmt: 'Open turf' }
+    ];
+    const times = ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+    const now = new Date();
+    const dates = [];
+    for (let i = 0; i < 7; i++) dates.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i));
+
+    let sel = s.slot;
+    if (this.taken(sel, s.day, s.pitch)) {
+      sel = times.findIndex((t, i) => !this.taken(i, s.day, s.pitch));
+    }
+
+    const reset = (patch) => this.setState({ ...patch, sent: false });
+
+    const pitches = names.map((n, i) => ({ label: n.label, on: s.pitch === i, pick: () => reset({ pitch: i }) }));
+    const days = dates.map((d, i) => ({
+      wd: i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' }),
+      num: d.getDate(),
+      on: s.day === i,
+      pick: () => reset({ day: i })
+    }));
+    const slots = times.map((t, i) => ({
+      label: t,
+      on: sel === i,
+      taken: this.taken(i, s.day, s.pitch),
+      pick: () => reset({ slot: i })
+    }));
+
+    const d = dates[s.day];
+    const startH = parseInt(times[sel], 10);
+    const send = () => this.setState({ sent: true });
+
+    return {
+      accent: this.props.accent ?? '#c8ff3d',
+      playState: (this.props.spin ?? true) ? 'running' : 'paused',
+      tiltX: s.tx.toFixed(2),
+      tiltY: s.ty.toFixed(2),
+      onMove: (e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        this.setState({ tx: -y * 12, ty: x * 16 });
+      },
+      onLeave: () => this.setState({ tx: 0, ty: 0 }),
+      pickA: () => reset({ pitch: 0 }),
+      pickB: () => reset({ pitch: 1 }),
+      pickT: () => reset({ pitch: 2 }),
+      pitches, days, slots,
+      ticketPitch: names[s.pitch].name,
+      ticketFormat: names[s.pitch].fmt,
+      ticketDate: d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }),
+      ticketTime: times[sel] + ' – ' + (startH + 1) + ':00',
+      send,
+      sent: s.sent,
+      notSent: !s.sent
+    };
+  }
+}
+</script>
+</body>
+</html>
